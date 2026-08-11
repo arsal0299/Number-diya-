@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Mailbox as MailboxIcon, Plus, Inbox as InboxIcon, RefreshCw, Loader2, MailOpen, ChevronRight } from "lucide-react";
+import { Mailbox as MailboxIcon, Plus, Inbox as InboxIcon, RefreshCw, Loader2, MailOpen, ChevronRight, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { npApi } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
@@ -26,6 +26,7 @@ export function TempMail() {
   const [selected, setSelected] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [releasingId, setReleasingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     const { data } = await supabase
@@ -61,6 +62,25 @@ export function TempMail() {
       toast(e.message || "Could not generate mailbox.", "error");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const release = async (m: Mailbox) => {
+    if (!confirm(`Release mailbox ${m.address}? This cannot be undone.`)) return;
+    setReleasingId(m.id);
+    try {
+      const { error: e } = await supabase.from("mailboxes").delete().eq("id", m.id);
+      if (e) throw e;
+      toast("Mailbox released.", "success");
+      if (selected === m.address) {
+        setSelected(null);
+        setMessages([]);
+      }
+      await load();
+    } catch (e: any) {
+      toast(e.message || "Could not release mailbox.", "error");
+    } finally {
+      setReleasingId(null);
     }
   };
 
@@ -118,20 +138,29 @@ export function TempMail() {
           ) : (
             <div className="space-y-2 max-h-[280px] overflow-y-auto">
               {mailboxes.map((m) => (
-                <button
+                <div
                   key={m.id}
-                  onClick={() => view(m.address)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl text-left transition"
+                  className="w-full flex items-center justify-between p-3 rounded-xl text-left transition gap-2"
                   style={{
                     background: selected === m.address ? "rgba(52,211,153,0.1)" : "var(--panel)",
                     border: "1px solid var(--border)",
                   }}
                 >
-                  <span className="font-mono text-sm" style={{ color: selected === m.address ? "var(--color-brand-400)" : "var(--fg)" }}>
-                    {m.address}
-                  </span>
-                  <ChevronRight className="w-4 h-4" style={{ color: "var(--fg-dim)" }} />
-                </button>
+                  <button onClick={() => view(m.address)} className="flex items-center gap-2 flex-1 min-w-0 text-left">
+                    <span className="font-mono text-sm truncate" style={{ color: selected === m.address ? "var(--color-brand-400)" : "var(--fg)" }}>
+                      {m.address}
+                    </span>
+                    <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "var(--fg-dim)" }} />
+                  </button>
+                  <button
+                    disabled={releasingId === m.id}
+                    onClick={() => release(m)}
+                    className="btn btn-ghost btn-sm shrink-0"
+                    title="Release mailbox"
+                  >
+                    {releasingId === m.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5 text-red-400" />}
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -145,9 +174,20 @@ export function TempMail() {
             <h2 className="font-display font-bold text-xl" style={{ color: "var(--fg)" }}>
               Inbox — <span className="font-mono text-brand-400">{selected}</span>
             </h2>
-            <button onClick={() => view(selected)} className="btn btn-ghost btn-sm">
-              <RefreshCw className="w-3.5 h-3.5" /> Refresh
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => view(selected)} className="btn btn-ghost btn-sm">
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh
+              </button>
+              <button
+                onClick={() => {
+                  const m = mailboxes.find((mb) => mb.address === selected);
+                  if (m) release(m);
+                }}
+                className="btn btn-ghost btn-sm"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-400" /> Release
+              </button>
+            </div>
           </div>
           <div className="card p-5">
             {loadingMessages ? (
