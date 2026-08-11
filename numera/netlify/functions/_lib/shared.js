@@ -75,11 +75,15 @@ export async function requireAdmin(event) {
 }
 
 export function body(event) {
-  if (!event.body) return {};
+  // GET/HEAD requests can't carry a fetch() body (browsers strip/reject it),
+  // so the client sends those params as a query string instead. Fall back to
+  // queryStringParameters whenever there's no usable JSON body.
+  if (!event.body) return event.queryStringParameters || {};
   try {
-    return JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, "base64").toString() : event.body);
+    const parsed = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, "base64").toString() : event.body);
+    return { ...(event.queryStringParameters || {}), ...parsed };
   } catch {
-    return {};
+    return event.queryStringParameters || {};
   }
 }
 
