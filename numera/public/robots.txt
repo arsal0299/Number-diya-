@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /topup
+Disallow: /mail
+Disallow: /history
+Disallow: /settings
+Disallow: /admin
+
+Sitemap: https://numera.app/sitemap.xml

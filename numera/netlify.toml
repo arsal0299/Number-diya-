@@ -1,0 +1,18 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Auto-refund expired pending numbers every 5 minutes.
+# Requires CRON_SECRET env var; the function checks ?key=CRON_SECRET.
+[functions."expire-numbers"]
+  schedule = "*/5 * * * *"
+
+# SPA fallback so client-side routes (e.g. /dashboard) load index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
