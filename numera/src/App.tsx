@@ -12,6 +12,9 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { Dashboard } from "./pages/app/Dashboard";
 import { TopUp } from "./pages/app/TopUp";
 import { TempMail } from "./pages/app/TempMail";
+import { BannerGenerator } from "./pages/app/BannerGenerator";
+import { Referrals } from "./pages/app/Referrals";
+import { LiveOtp } from "./pages/app/LiveOtp";
 import { History } from "./pages/app/History";
 
 import { AdminLayout } from "./components/layout/AdminLayout";
@@ -57,6 +60,30 @@ export default function App() {
                   element={
                     <AppLayout>
                       <TempMail />
+                    </AppLayout>
+                  }
+                />
+                <Route
+                  path="/banner"
+                  element={
+                    <AppLayout>
+                      <BannerGenerator />
+                    </AppLayout>
+                  }
+                />
+                <Route
+                  path="/referrals"
+                  element={
+                    <AppLayout>
+                      <Referrals />
+                    </AppLayout>
+                  }
+                />
+                <Route
+                  path="/live-otp"
+                  element={
+                    <AppLayout>
+                      <LiveOtp />
                     </AppLayout>
                   }
                 />
