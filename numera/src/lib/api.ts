@@ -85,6 +85,13 @@ export const npApi = {
     request("np-mail-generate", { body: { username } }),
   mailMessages: (address: string) =>
     request("np-mail-messages", { method: "GET", body: { address } }),
+  bannerGenerate: (type: string, text: string) =>
+    request("banner-generate", { body: { type, text } }),
+};
+
+/* ── Referrals ─────────────────────────────────────────────────── */
+export const referralApi = {
+  stats: () => request("referral-stats", { method: "GET" }),
 };
 
 /* ── Public site settings ─────────────────────────────────────── */
