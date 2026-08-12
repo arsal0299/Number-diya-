@@ -94,6 +94,11 @@ export const referralApi = {
   stats: () => request("referral-stats", { method: "GET" }),
 };
 
+/* ── Live OTP feed ─────────────────────────────────────────────── */
+export const otpFeedApi = {
+  get: () => request("live-otp-feed", { method: "GET" }),
+};
+
 /* ── Public site settings ─────────────────────────────────────── */
 export const settingsApi = {
   public: () => request("public-settings", { method: "GET", auth: false }),
