@@ -78,6 +78,11 @@ export function body(event) {
   // GET/HEAD requests can't carry a fetch() body (browsers strip/reject it),
   // so the client sends those params as a query string instead. Fall back to
   // queryStringParameters whenever there's no usable JSON body.
+  // On Vercel the platform already parses a JSON body into an object; on
+  // Netlify event.body is always a raw string. Handle both.
+  if (event.body && typeof event.body === "object") {
+    return { ...(event.queryStringParameters || {}), ...event.body };
+  }
   if (!event.body) return event.queryStringParameters || {};
   try {
     const parsed = JSON.parse(event.isBase64Encoded ? Buffer.from(event.body, "base64").toString() : event.body);
@@ -85,6 +90,31 @@ export function body(event) {
   } catch {
     return event.queryStringParameters || {};
   }
+}
+
+/**
+ * Wrap a Netlify-style handler(event) so the same function file also works
+ * as a Vercel Node.js serverless function, which uses (req, res) instead.
+ * Only used when deploying to Vercel — imported by each function file's
+ * `export default withVercel(handler)` line.
+ */
+export function withVercel(handler) {
+  return async function (req, res) {
+    const event = {
+      httpMethod: req.method,
+      headers: req.headers || {},
+      queryStringParameters: req.query || {},
+      body: req.body,
+      isBase64Encoded: false,
+    };
+    const result = await handler(event);
+    const status = result?.statusCode ?? 200;
+    const headers = result?.headers || {};
+    for (const [k, v] of Object.entries(headers)) {
+      res.setHeader(k, v);
+    }
+    res.status(status).send(result?.body ?? "");
+  };
 }
 
 /* ── Settings helper ──────────────────────────────────────────── */

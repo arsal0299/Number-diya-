@@ -28,10 +28,27 @@ async function request<T = any>(
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (auth) Object.assign(headers, await authHeaders());
 
-  const res = await fetch(`/api/${path}`, {
+  // Browsers reject/strip a body on GET requests, so for GET we serialize
+  // the payload into the query string instead of the request body.
+  let url = `/api/${path}`;
+  let fetchBody: string | undefined;
+  if (method === "GET" || method === "HEAD") {
+    if (body && typeof body === "object") {
+      const params = new URLSearchParams();
+      for (const [k, v] of Object.entries(body as Record<string, unknown>)) {
+        if (v !== undefined && v !== null && v !== "") params.set(k, String(v));
+      }
+      const qs = params.toString();
+      if (qs) url += `?${qs}`;
+    }
+  } else {
+    fetchBody = body !== undefined ? JSON.stringify(body) : undefined;
+  }
+
+  const res = await fetch(url, {
     method,
     headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: fetchBody,
   });
 
   let data: any = null;
@@ -68,6 +85,18 @@ export const npApi = {
     request("np-mail-generate", { body: { username } }),
   mailMessages: (address: string) =>
     request("np-mail-messages", { method: "GET", body: { address } }),
+  bannerGenerate: (type: string, text: string) =>
+    request("banner-generate", { body: { type, text } }),
+};
+
+/* ── Referrals ─────────────────────────────────────────────────── */
+export const referralApi = {
+  stats: () => request("referral-stats", { method: "GET" }),
+};
+
+/* ── Live OTP feed ─────────────────────────────────────────────── */
+export const otpFeedApi = {
+  get: () => request("live-otp-feed", { method: "GET" }),
 };
 
 /* ── Public site settings ─────────────────────────────────────── */

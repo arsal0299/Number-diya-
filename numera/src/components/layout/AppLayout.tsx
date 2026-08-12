@@ -12,6 +12,9 @@ import {
   LogOut,
   Shield,
   Settings as SettingsIcon,
+  Sparkles,
+  Gift,
+  Radio,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useSettings } from "../../context/SettingsContext";
@@ -22,7 +25,9 @@ import { Logo } from "../Logo";
 
 const NAV = [
   { to: "/dashboard", label: "Numbers", icon: LayoutDashboard },
+  { to: "/live-otp", label: "Live OTP", icon: Radio },
   { to: "/mail", label: "Temp Mail", icon: Mailbox },
+  { to: "/referrals", label: "Refer & Earn", icon: Gift },
   { to: "/topup", label: "Top Up", icon: Wallet },
   { to: "/history", label: "History", icon: History },
 ];
